@@ -14,7 +14,10 @@
         "vite": "^4.3.2"
     },
     "dependencies": {
+        "@colyseus/schema": "^2.0.9",
         "@pixi/graphics-smooth": "^1.1.0",
+        "colyseus.js": "^0.15.8",
+        "pixi-viewport": "^5.0.1",
         "pixi.js": "^7.2.4"
     }
 }
