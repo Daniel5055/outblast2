@@ -1,10 +1,4 @@
-import { OrbitalSchema } from './Orbital';
+import { Orbital } from './Orbital';
+import { BulletSchema } from './schemas/BulletSchema';
 
-export class BulletSchema extends OrbitalSchema {
-    static bulletRadius = 5;
-    static bulletMass = 5;
-
-    type = 'Bullet' as 'Bullet';
-}
-
-export class Bullet extends BulletSchema {}
+export class Bullet extends Orbital<BulletSchema> {}

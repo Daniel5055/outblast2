@@ -1,7 +1,7 @@
 import { ArraySchema, MapSchema, Schema } from '@colyseus/schema';
-import { OrbitalSchema } from './Orbital';
-import { PlayerSchema } from './Player';
-import { BodySchema } from './Body';
+import { OrbitalSchema } from './OrbitalSchema';
+import { BodySchema } from './BodySchema';
+import { PlayerSchema } from './PlayerSchema';
 
 export class GameRoomState extends Schema {
     orbitals = new ArraySchema<OrbitalSchema>();
