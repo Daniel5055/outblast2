@@ -1,5 +1,5 @@
 import { ArraySchema, Schema } from '@colyseus/schema';
-import { Point, Sprite } from 'pixi.js';
+import { Container, Point, Sprite } from 'pixi.js';
 import { SmoothGraphics } from '@pixi/graphics-smooth';
 import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
@@ -8,7 +8,7 @@ import { Player } from './Player';
 
 export class Body extends GameObject<BodySchema> {
     #graphics: SmoothGraphics | undefined;
-    #sprite: Sprite | undefined;
+    #sprite: Container | undefined;
     #easing: Easing | undefined;
     #rotate: Easing | undefined;
 
@@ -21,7 +21,7 @@ export class Body extends GameObject<BodySchema> {
         this.#graphics.beginFill(0xbbbbbb, 1.0, true);
         this.#graphics.drawCircle(0, 0, this.data.radius);
 
-        this.#sprite = new Sprite();
+        this.#sprite = new Container();
         this.#sprite.addChild(this.#graphics);
         this.#sprite.position.x = this.data.x;
         this.#sprite.position.y = this.data.y;
@@ -43,21 +43,25 @@ export class Body extends GameObject<BodySchema> {
         this.#easing = ease.add(this.#sprite!, { x, y }, { duration: 50, ease: 'linear' });
     }
     rotate(rotation: number) {
-        //this.#rotate = ease.add(this.#sprite!, { rotation: -rotation }, { duration: 50, ease: 'linear'})
+        this.#rotate = ease.add(
+            this.#sprite!,
+            { rotation: -rotation },
+            { duration: 50, ease: 'linear' }
+        );
     }
     attach(p: Player) {
-        console.log('attach');
         const playerGraphics = p.graphics();
         playerGraphics!.removeFromParent();
-        this.#sprite!.addChild(p.graphics()!); //, 0)
+        this.#sprite!.addChild(p.graphics()!);
 
         p.stopMoving();
         playerGraphics?.position.set(p.data.x, p.data.y);
 
-        p.addCannon();
+        p.addCannon(Math.PI - p.data.targetAngle + p.data.cannonAngle);
     }
     detach(p: Player) {
-        p.graphics()?.removeFromParent();
+        p.graphics().removeFromParent();
+        p.graphics().position.set(p.data.x, p.data.y);
         p.removeCannon();
     }
 }

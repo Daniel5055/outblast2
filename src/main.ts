@@ -48,12 +48,17 @@ window.onresize = () => {
 
 settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NONE;
 
+// Internal state
 let bodies: Body[] = [];
-let orbitals: Orbital<OrbitalSchema>[] = [];
+let orbitals: Map<string, Orbital<OrbitalSchema>> = new Map();
 let players: Map<string, Player> = new Map();
+let bullets: Map<string, Bullet> = new Map();
+
+let inputs = { w: false, a: false, s: false, d: false };
 
 const client = new Client('ws://localhost:2567');
 client.joinOrCreate<GameRoomState>('my_room').then((room) => {
+    // Bodies
     room.state.bodies.onAdd((b, i) => {
         const body = new Body(b);
         bodies[i] = body;
@@ -63,32 +68,84 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         b.players.onAdd((p) => {
             bodies[i].attach(players.get(p.name)!);
         });
+        b.players.onRemove((p) => {
+            bodies[i].detach(players.get(p.name)!);
+            viewport.addChildAt(players.get(p.name)!.graphics(), 0);
+        });
     });
 
-    room.state.orbitals.onAdd((o, i) => {
-        let orb;
-        if (o.type === 'Player') {
-            orb = new Player(o as PlayerSchema, bodies);
-            players.set(orb.data.name, orb);
-        } else {
-            orb = new Bullet(o as BulletSchema);
-        }
-
-        orbitals[i] = orb;
-        viewport.addChild(orb.create());
-
-        o.onChange(() => orbitals[i]?.update(room.state.orbitals[i]));
-    });
-    room.state.orbitals.onRemove((o, i) => {
-        console.log('removed', i);
-        if (o.type === 'Bullet') {
-            orbitals[i].destroy();
-        }
-        orbitals.splice(i, 1);
+    room.state.orbitals.onAdd((o) => {
+        orbitals.get(o.name)?.graphics().position.set(o.x, o.y);
+        o.onChange(() => orbitals.get(o.name)!.move(o.x, o.y));
     });
 
-    room.state.players.onRemove((p, i) => {
-        players.get(i)?.destroy();
+    // Players
+    room.state.players.onAdd((p, i) => {
+        const player = new Player(p, bodies);
+        console.log('added');
+        viewport.addChildAt(player.create(), 0);
+
+        players.set(i, player);
+        orbitals.set(i, player);
+
+        p.onChange(() => players.get(i)!.update(p));
+    });
+
+    room.state.players.onRemove((_, i) => {
+        players.get(i)!.destroy();
         players.delete(i);
     });
+
+    // Bullets
+    room.state.bullets.onAdd((b, i) => {
+        const bullet = new Bullet(b);
+        viewport.addChildAt(bullet.create(), 0);
+
+        bullets.set(i, bullet);
+        orbitals.set(i, bullet);
+
+        b.onChange(() => bullets.get(i)!.update(b));
+    });
+    room.state.bullets.onRemove((_, i) => {
+        bullets.get(i)!.destroy();
+        bullets.delete(i);
+    });
+
+    function onKeyDown(e: KeyboardEvent) {
+        switch (e.key) {
+            case 'w':
+                inputs.w = true;
+                break;
+            case 'a':
+                inputs.a = true;
+                break;
+            case 's':
+                inputs.s = true;
+                break;
+            case 'd':
+                inputs.d = true;
+                break;
+        }
+        room.send(0, inputs);
+    }
+    function onKeyUp(e: KeyboardEvent) {
+        switch (e.key) {
+            case 'w':
+                inputs.w = false;
+                break;
+            case 'a':
+                inputs.a = false;
+                break;
+            case 's':
+                inputs.s = false;
+                break;
+            case 'd':
+                inputs.d = false;
+                break;
+        }
+        room.send(0, inputs);
+    }
+
+    window.onkeydown = onKeyDown;
+    window.onkeyup = onKeyUp;
 });

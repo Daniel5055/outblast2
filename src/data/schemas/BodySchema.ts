@@ -1,4 +1,4 @@
-import { ArraySchema, Schema } from '@colyseus/schema';
+import { Schema, SetSchema } from '@colyseus/schema';
 import { PlayerSchema } from './PlayerSchema';
 
 export class BodySchema extends Schema {
@@ -9,5 +9,5 @@ export class BodySchema extends Schema {
     x: number = 0;
     y: number = 0;
     rotationAngle: number = 0;
-    players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
+    players: SetSchema<PlayerSchema> = new SetSchema<PlayerSchema>();
 }

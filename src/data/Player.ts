@@ -2,15 +2,22 @@ import { SmoothGraphics } from '@pixi/graphics-smooth';
 import { Body } from './Body';
 import { Orbital } from './Orbital';
 import { PlayerSchema } from './schemas/PlayerSchema';
-import { OrbitalSchema } from './schemas/OrbitalSchema';
+import { Easing, ease } from 'pixi-ease';
 
 export class Player extends Orbital<PlayerSchema> {
+    bTarget: Body | null = null;
     #cannon: SmoothGraphics | undefined;
+    #rotate: Easing | undefined;
 
     removeCannon() {
         this.graphics()?.removeChild(this.#cannon!);
     }
-    addCannon() {
+    addCannon(angle: number) {
+        this.graphics()?.addChild(this.getCannon());
+        this.getCannon()!.rotation = angle;
+        //console.log(this.data.targetAngle / Math.PI)
+    }
+    getCannon() {
         if (this.#cannon === undefined) {
             const x = -this.data.cannonWidth / 2;
             const y = 0;
@@ -18,14 +25,18 @@ export class Player extends Orbital<PlayerSchema> {
             this.#cannon = new SmoothGraphics();
             this.#cannon.beginFill(0x777777, 1.0, false);
             this.#cannon.drawRect(x, y, this.data.cannonWidth, this.data.cannonHeight);
-            this.#cannon.rotation = this.data.targetAngle;
             this.#cannon.endFill();
         }
-
-        this.graphics()?.addChildAt(this.#cannon, 0);
-        console.log(this.graphics()?.children, this.data.cannonWidth, this.data.cannonHeight);
+        return this.#cannon;
     }
-    bTarget: Body | null = null;
+
+    moveCannon(angle: number) {
+        this.#rotate = ease.add(
+            this.getCannon(),
+            { rotation: -this.data.targetAngle - angle },
+            { duration: 50, ease: 'linear' }
+        );
+    }
 
     constructor(p: PlayerSchema, bodies: Body[]) {
         super(p);
@@ -37,5 +48,6 @@ export class Player extends Orbital<PlayerSchema> {
 
     update(p: PlayerSchema): void {
         super.update(p);
+        p.target !== -1 && this.moveCannon(p.cannonAngle);
     }
 }
