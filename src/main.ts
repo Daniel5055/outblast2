@@ -56,6 +56,15 @@ let bullets: Map<string, Bullet> = new Map();
 
 let inputs = { w: false, a: false, s: false, d: false };
 
+app.ticker.add(update);
+
+function update(delta: number) {
+    // Controlling when movement occurs
+    // Prevents stuff like moving before detaching etc.
+    players.forEach((p) => p.move(p.data.x, p.data.y));
+    bullets.forEach((b) => b.move(b.data.x, b.data.y));
+}
+
 const client = new Client('ws://localhost:2567');
 client.joinOrCreate<GameRoomState>('my_room').then((room) => {
     // Bodies
@@ -66,20 +75,14 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
 
         b.onChange(() => bodies[i].update(room.state.bodies[i]));
         b.players.onAdd((p) => {
-            bodies[i].attach(players.get(p.name)!);
+            bodies[i].attach(players.get(p)!);
         });
         b.players.onRemove((p) => {
-            bodies[i].detach(players.get(p.name)!);
-            viewport.addChildAt(players.get(p.name)!.graphics(), 0);
+            bodies[i].detach(players.get(p)!);
+            viewport.addChildAt(players.get(p)!.graphics(), 0);
         });
     });
 
-    room.state.orbitals.onAdd((o) => {
-        orbitals.get(o.name)?.graphics().position.set(o.x, o.y);
-        o.onChange(() => orbitals.get(o.name)!.move(o.x, o.y));
-    });
-
-    // Players
     room.state.players.onAdd((p, i) => {
         const player = new Player(p, bodies);
         console.log('added');
@@ -88,7 +91,9 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         players.set(i, player);
         orbitals.set(i, player);
 
-        p.onChange(() => players.get(i)!.update(p));
+        p.onChange(() => {
+            player.update(p);
+        });
     });
 
     room.state.players.onRemove((_, i) => {
@@ -104,7 +109,9 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         bullets.set(i, bullet);
         orbitals.set(i, bullet);
 
-        b.onChange(() => bullets.get(i)!.update(b));
+        b.onChange(() => {
+            bullet.update(b);
+        });
     });
     room.state.bullets.onRemove((_, i) => {
         bullets.get(i)!.destroy();

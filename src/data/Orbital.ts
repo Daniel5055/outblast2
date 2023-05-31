@@ -8,6 +8,12 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     #graphics: SmoothGraphics | undefined;
     #sprite: Container | undefined;
     #easing: Easing | undefined;
+    #moved: boolean = false;
+
+    update(t: T) {
+        super.update(t);
+        this.#moved = false;
+    }
 
     create() {
         this.#graphics = new SmoothGraphics();
@@ -28,7 +34,14 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     }
 
     move(x: number, y: number) {
-        this.#easing = ease.add(this.graphics(), { x: x, y: y }, { duration: 50, ease: 'linear' });
+        if (!this.#moved) {
+            this.#easing = ease.add(
+                this.graphics(),
+                { x: x, y: y },
+                { duration: 50, ease: 'linear' }
+            );
+            this.#moved = true;
+        }
     }
     stopMoving() {
         this.#easing?.remove(this.#sprite);

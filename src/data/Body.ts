@@ -6,6 +6,7 @@ import { BodySchema } from './schemas/BodySchema';
 import { Player } from './Player';
 
 export class Body extends GameObject<BodySchema> {
+    //players: Set<Player> = new Set<Player>();
     #graphics: SmoothGraphics | undefined;
     #sprite: Container | undefined;
     #easing: Easing | undefined;
@@ -55,10 +56,10 @@ export class Body extends GameObject<BodySchema> {
 
         p.stopMoving();
         playerGraphics?.position.set(p.data.x, p.data.y);
-
         p.addCannon();
     }
     detach(p: Player) {
+        console.log('detach');
         p.graphics().removeFromParent();
         p.graphics().position.set(p.data.x, p.data.y);
         p.removeCannon();

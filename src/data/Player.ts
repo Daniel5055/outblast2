@@ -38,6 +38,13 @@ export class Player extends Orbital<PlayerSchema> {
             { duration: 50, ease: 'linear' }
         );
     }
+    move(x: number, y: number) {
+        if (this.data.target === -1) {
+            super.move(x, y);
+        } else {
+            this.graphics().position.set(x, y);
+        }
+    }
 
     constructor(p: PlayerSchema, bodies: Body[]) {
         super(p);

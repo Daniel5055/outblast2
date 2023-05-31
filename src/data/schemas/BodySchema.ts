@@ -1,5 +1,4 @@
 import { Schema, SetSchema } from '@colyseus/schema';
-import { PlayerSchema } from './PlayerSchema';
 
 export class BodySchema extends Schema {
     // Mutable data
@@ -9,5 +8,5 @@ export class BodySchema extends Schema {
     x: number = 0;
     y: number = 0;
     rotationAngle: number = 0;
-    players: SetSchema<PlayerSchema> = new SetSchema<PlayerSchema>();
+    players: SetSchema<string> = new SetSchema<string>();
 }
