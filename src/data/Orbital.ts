@@ -1,6 +1,6 @@
 import { SmoothGraphics } from '@pixi/graphics-smooth';
 import { Easing, ease } from 'pixi-ease';
-import { Container, Sprite } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { OrbitalSchema } from './schemas/OrbitalSchema';
 import { GameObject } from './GameObject';
 
@@ -8,10 +8,6 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     #graphics: SmoothGraphics | undefined;
     #sprite: Container | undefined;
     #easing: Easing | undefined;
-
-    update(t: T) {
-        super.update(t);
-    }
 
     create() {
         this.#graphics = new SmoothGraphics();
@@ -39,7 +35,7 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     }
     destroy() {
         this.#easing?.remove(this.#graphics);
-        this.#graphics?.destroy();
-        this.#sprite?.destroy();
+        this.#graphics!.destroy();
+        this.#sprite!.destroy();
     }
 }

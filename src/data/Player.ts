@@ -10,26 +10,27 @@ export class Player extends Orbital<PlayerSchema> {
     #rotate: Easing | undefined;
 
     removeCannon() {
-        this.graphics()?.removeChild(this.#cannon!);
+        this.graphics().removeChild(this.getCannon());
     }
-    addCannon(angle: number) {
-        this.graphics()?.addChild(this.getCannon());
-        this.getCannon()!.rotation = angle;
-        //console.log(this.data.targetAngle / Math.PI)
+    addCannon() {
+        this.graphics().addChildAt(this.getCannon(), 0);
+        this.getCannon().rotation = Math.PI - this.data.targetAngle + this.data.cannonAngle;
     }
     getCannon() {
-        if (this.#cannon === undefined) {
-            const x = -this.data.cannonWidth / 2;
-            const y = 0;
-
-            this.#cannon = new SmoothGraphics();
-            this.#cannon.beginFill(0x777777, 1.0, false);
-            this.#cannon.drawRect(x, y, this.data.cannonWidth, this.data.cannonHeight);
-            this.#cannon.endFill();
-        }
-        return this.#cannon;
+        return this.#cannon!;
     }
+    create() {
+        // Also creating cannon asset
+        const x = -this.data.cannonWidth / 2;
+        const y = 0;
 
+        this.#cannon = new SmoothGraphics();
+        this.#cannon.beginFill(0x777777, 1.0, false);
+        this.#cannon.drawRect(x, y, this.data.cannonWidth, this.data.cannonHeight);
+        this.#cannon.endFill();
+
+        return super.create();
+    }
     moveCannon(angle: number) {
         this.#rotate = ease.add(
             this.getCannon(),

@@ -1,5 +1,4 @@
-import { ArraySchema, Schema } from '@colyseus/schema';
-import { Container, Point, Sprite } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { SmoothGraphics } from '@pixi/graphics-smooth';
 import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
@@ -51,13 +50,13 @@ export class Body extends GameObject<BodySchema> {
     }
     attach(p: Player) {
         const playerGraphics = p.graphics();
-        playerGraphics!.removeFromParent();
-        this.#sprite!.addChild(p.graphics()!);
+        playerGraphics.removeFromParent();
+        this.#sprite!.addChildAt(p.graphics(), 0);
 
         p.stopMoving();
         playerGraphics?.position.set(p.data.x, p.data.y);
 
-        p.addCannon(Math.PI - p.data.targetAngle + p.data.cannonAngle);
+        p.addCannon();
     }
     detach(p: Player) {
         p.graphics().removeFromParent();
