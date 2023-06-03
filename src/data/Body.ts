@@ -4,7 +4,6 @@ import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
 import { BodySchema } from './schemas/BodySchema';
 import { Player } from './Player';
-import { GlowFilter } from '@pixi/filter-glow';
 
 export class Body extends GameObject<BodySchema> {
     //players: Set<Player> = new Set<Player>();
@@ -35,7 +34,7 @@ export class Body extends GameObject<BodySchema> {
     }
 
     graphics() {
-        return this.#sprite;
+        return this.#sprite!;
     }
 
     update(b: BodySchema): void {
@@ -64,9 +63,11 @@ export class Body extends GameObject<BodySchema> {
         p.addCannon();
     }
     detach(p: Player) {
-        console.log('detach');
-        p.graphics().removeFromParent();
-        p.graphics().position.set(p.data.x, p.data.y);
-        p.removeCannon();
+        if (this.graphics().removeChild(p.graphics()) !== null) {
+            p.graphics().position.set(p.data.x, p.data.y);
+            p.removeCannon();
+            return true;
+        }
+        return false;
     }
 }

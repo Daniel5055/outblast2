@@ -53,11 +53,61 @@ let orbitals: Map<string, Orbital<OrbitalSchema>> = new Map();
 let players: Map<string, Player> = new Map();
 let bullets: Map<string, Bullet> = new Map();
 
+let myPlayer: Player | undefined = undefined;
+
 let inputs = { w: false, a: false, s: false, d: false };
 
 app.ticker.add(update);
 
 function update(delta: number) {
+    delta *= 16;
+    if (inputs.w) {
+        inputs.w = false;
+        if (myPlayer && myPlayer.data.target !== -1) {
+            const b = bodies[myPlayer.data.target];
+
+            const rotAngle = myPlayer.data.targetAngle + b.data.rotationAngle;
+
+            // Calculated new player position
+            myPlayer.data.x = b.data.x + Math.cos(rotAngle) * b.data.radius;
+            myPlayer.data.y = b.data.y - Math.sin(rotAngle) * b.data.radius;
+
+            // Calculate new speed
+            const vx = Math.cos(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
+            const vy = -Math.sin(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
+
+            if (b.detach(myPlayer)) {
+                viewport.addChildAt(myPlayer.graphics(), 0);
+            }
+            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
+
+            myPlayer.data.x = myPlayer.data.x + vx * delta;
+            myPlayer.data.y = myPlayer.data.y + vy * delta;
+
+            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
+
+            myPlayer.data.target = -1;
+        }
+    }
+
+    const cannonMovementTick = 0.05 / 17;
+    const cannonEdge = 0.5;
+
+    if (myPlayer && inputs.a) {
+        if (myPlayer.data.cannonAngle < Math.PI - cannonEdge) {
+            myPlayer.data.cannonAngle += cannonMovementTick * delta;
+
+            myPlayer.data.target !== -1 && myPlayer.moveCannon(myPlayer.data.cannonAngle);
+        }
+    }
+    if (myPlayer && inputs.d) {
+        if (myPlayer.data.cannonAngle > cannonEdge) {
+            myPlayer.data.cannonAngle -= cannonMovementTick * delta;
+
+            myPlayer.data.target !== -1 && myPlayer.moveCannon(myPlayer.data.cannonAngle);
+        }
+    }
+
     // Controlling when movement occurs
     // Prevents stuff like moving before detaching etc.
     players.forEach((p) => p.move(p.data.x, p.data.y));
@@ -71,6 +121,9 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         const player = new Player(p, bodies);
         console.log('added');
         viewport.addChildAt(player.create(), 0);
+        if (i == room.sessionId) {
+            myPlayer = player;
+        }
 
         players.set(i, player);
         orbitals.set(i, player);
@@ -112,8 +165,9 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
             players.get(p) && bodies[i].attach(players.get(p)!);
         });
         b.players.onRemove((p) => {
-            bodies[i].detach(players.get(p)!);
-            viewport.addChildAt(players.get(p)!.graphics(), 0);
+            if (bodies[i].detach(players.get(p)!)) {
+                viewport.addChildAt(players.get(p)!.graphics(), 0);
+            }
         });
     });
 

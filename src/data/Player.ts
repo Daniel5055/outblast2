@@ -65,5 +65,6 @@ export class Player extends Orbital<PlayerSchema> {
     update(p: PlayerSchema): void {
         super.update(p);
         p.target !== -1 && this.moveCannon(p.cannonAngle);
+        console.log('move', p.x, p.y);
     }
 }
