@@ -4,10 +4,10 @@ import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
 import { BodySchema } from './schemas/BodySchema';
 import { Player } from './Player';
+import { GlowFilter } from '@pixi/filter-glow';
 
 export class Body extends GameObject<BodySchema> {
     //players: Set<Player> = new Set<Player>();
-    #graphics: SmoothGraphics | undefined;
     #sprite: Container | undefined;
     #easing: Easing | undefined;
     #rotate: Easing | undefined;
@@ -17,12 +17,17 @@ export class Body extends GameObject<BodySchema> {
     }
 
     create() {
-        this.#graphics = new SmoothGraphics();
-        this.#graphics.beginFill(0xbbbbbb, 1.0, true);
-        this.#graphics.drawCircle(0, 0, this.data.radius);
+        const graphics = new SmoothGraphics();
+        graphics.beginFill(0xcccccc, 1.0, true);
+        graphics.drawCircle(0, 0, this.data.radius);
+
+        const spot = new SmoothGraphics();
+        spot.beginFill(0x444444, 1.0, true);
+        spot.drawCircle(0, this.data.radius - 20, 5);
 
         this.#sprite = new Container();
-        this.#sprite.addChild(this.#graphics);
+        this.#sprite.addChild(graphics);
+        this.#sprite.addChild(spot);
         this.#sprite.position.x = this.data.x;
         this.#sprite.position.y = this.data.y;
 

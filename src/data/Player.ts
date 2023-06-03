@@ -9,6 +9,10 @@ export class Player extends Orbital<PlayerSchema> {
     #cannon: SmoothGraphics | undefined;
     #rotate: Easing | undefined;
 
+    baseColor(): number {
+        return 0xd4336e;
+    }
+
     removeCannon() {
         this.graphics().removeChild(this.getCannon());
     }
@@ -30,6 +34,10 @@ export class Player extends Orbital<PlayerSchema> {
         this.#cannon.endFill();
 
         return super.create();
+    }
+    destroy(): void {
+        this.#cannon?.destroy();
+        super.destroy();
     }
     moveCannon(angle: number) {
         this.#rotate = ease.add(

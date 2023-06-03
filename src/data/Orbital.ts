@@ -15,16 +15,20 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
         this.#moved = false;
     }
 
+    baseColor() {
+        return 0xffffff;
+    }
+
     create() {
         this.#graphics = new SmoothGraphics();
-        this.#graphics.beginFill(0xff0000, 1.0, true);
+        this.#graphics.beginFill(this.baseColor(), 1.0, true);
         this.#graphics.drawCircle(0, 0, this.data.radius);
 
         this.#sprite = new Container();
         this.#sprite.addChild(this.#graphics);
         this.#sprite.position.x = this.data.x;
         this.#sprite.position.y = this.data.y;
-        this.#sprite.name = 'player';
+        this.#sprite.name = 'orbital';
 
         return this.#sprite;
     }

@@ -1,13 +1,11 @@
-import { Application, Graphics, Loader, Sprite, Texture } from 'pixi.js';
-import { SmoothGraphics, LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
+import { Application } from 'pixi.js';
+import { LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
 import { Client } from 'colyseus.js';
 import { GameRoomState } from './data/schemas/GameRoomSchema';
 import { Body } from './data/Body';
 import { Viewport } from 'pixi-viewport';
 import { Orbital } from './data/Orbital';
 import { Player } from './data/Player';
-import { PlayerSchema } from './data/schemas/PlayerSchema';
-import { BulletSchema } from './data/schemas/BulletSchema';
 import { Bullet } from './data/Bullet';
 import { OrbitalSchema } from './data/schemas/OrbitalSchema';
 
@@ -16,6 +14,7 @@ const app = new Application({
     height: window.innerHeight,
     resolution: devicePixelRatio,
     antialias: true,
+    backgroundColor: 0x15162b,
 });
 
 // @ts-ignore
@@ -67,23 +66,8 @@ function update(delta: number) {
 
 const client = new Client('ws://localhost:2567');
 client.joinOrCreate<GameRoomState>('my_room').then((room) => {
-    // Bodies
-    room.state.bodies.onAdd((b, i) => {
-        const body = new Body(b);
-        bodies[i] = body;
-        viewport.addChild(body.create());
-
-        b.onChange(() => bodies[i].update(room.state.bodies[i]));
-        b.players.onAdd((p) => {
-            bodies[i].attach(players.get(p)!);
-        });
-        b.players.onRemove((p) => {
-            bodies[i].detach(players.get(p)!);
-            viewport.addChildAt(players.get(p)!.graphics(), 0);
-        });
-    });
-
     room.state.players.onAdd((p, i) => {
+        console.log(i);
         const player = new Player(p, bodies);
         console.log('added');
         viewport.addChildAt(player.create(), 0);
@@ -116,6 +100,21 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
     room.state.bullets.onRemove((_, i) => {
         bullets.get(i)!.destroy();
         bullets.delete(i);
+    });
+    // Bodies
+    room.state.bodies.onAdd((b, i) => {
+        const body = new Body(b);
+        bodies[i] = body;
+        viewport.addChild(body.create());
+
+        b.onChange(() => bodies[i].update(room.state.bodies[i]));
+        b.players.onAdd((p) => {
+            players.get(p) && bodies[i].attach(players.get(p)!);
+        });
+        b.players.onRemove((p) => {
+            bodies[i].detach(players.get(p)!);
+            viewport.addChildAt(players.get(p)!.graphics(), 0);
+        });
     });
 
     function onKeyDown(e: KeyboardEvent) {
