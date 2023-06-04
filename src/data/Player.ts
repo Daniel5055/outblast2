@@ -9,6 +9,9 @@ export class Player extends Orbital<PlayerSchema> {
     #cannon: SmoothGraphics | undefined;
     #rotate: Easing | undefined;
 
+    vx: number | null = null;
+    vy: number | null = null;
+
     baseColor(): number {
         return 0xd4336e;
     }

@@ -8,6 +8,7 @@ import { Orbital } from './data/Orbital';
 import { Player } from './data/Player';
 import { Bullet } from './data/Bullet';
 import { OrbitalSchema } from './data/schemas/OrbitalSchema';
+import { GlowFilter } from '@pixi/filter-glow';
 
 const app = new Application({
     width: window.innerWidth,
@@ -57,6 +58,10 @@ let myPlayer: Player | undefined = undefined;
 
 let inputs = { w: false, a: false, s: false, d: false };
 
+new GlowFilter({
+    color: 0x000000,
+});
+
 app.ticker.add(update);
 
 function update(delta: number) {
@@ -72,17 +77,41 @@ function update(delta: number) {
             myPlayer.data.x = b.data.x + Math.cos(rotAngle) * b.data.radius;
             myPlayer.data.y = b.data.y - Math.sin(rotAngle) * b.data.radius;
 
-            // Calculate new speed
-            const vx = Math.cos(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
-            const vy = -Math.sin(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
-
+            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
             if (b.detach(myPlayer)) {
                 viewport.addChildAt(myPlayer.graphics(), 0);
             }
+
+            // Calculate new speed
+            let vx = Math.cos(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
+            let vy = -Math.sin(rotAngle + myPlayer.data.cannonAngle - Math.PI / 2) * 0.06 * 17;
+
+            myPlayer.data.x = myPlayer.data.x + (vx * delta) / 8;
+            myPlayer.data.y = myPlayer.data.y + (vy * delta) / 8;
+
             console.log('preMove', myPlayer.data.x, myPlayer.data.y);
 
-            myPlayer.data.x = myPlayer.data.x + vx * delta;
-            myPlayer.data.y = myPlayer.data.y + vy * delta;
+            for (const body of bodies) {
+                // The angle at which the body is from the orbital
+                const angle =
+                    Math.atan((body.data.y - myPlayer.data.y) / -(body.data.x - myPlayer.data.x)) +
+                    (body.data.x > myPlayer.data.x ? Math.PI : 0);
+
+                // Distance between them squared
+                const rSq =
+                    Math.pow(body.data.x - myPlayer.data.x, 2) +
+                    Math.pow(body.data.y - myPlayer.data.y, 2);
+
+                // Acceleration due to gravity
+                //const g = 0.01 * body.mass * orbital.mass / rSq
+                const g = ((40 / 100000) * body.data.mass) / Math.sqrt(rSq);
+
+                vx += (Math.cos(angle + Math.PI) * g * delta) / 8;
+                vy += (-Math.sin(angle + Math.PI) * g * delta) / 8;
+            }
+
+            myPlayer.data.x = myPlayer.data.x + (vx * delta) / 8;
+            myPlayer.data.y = myPlayer.data.y + (vy * delta) / 8;
 
             console.log('preMove', myPlayer.data.x, myPlayer.data.y);
 
