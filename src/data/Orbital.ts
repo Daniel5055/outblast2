@@ -12,6 +12,7 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
 
     update(t: T) {
         super.update(t);
+        this.move(this.data.x, this.data.y);
         this.#moved = false;
     }
 

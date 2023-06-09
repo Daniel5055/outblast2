@@ -58,6 +58,9 @@ let myPlayer: Player | undefined = undefined;
 
 let inputs = { w: false, a: false, s: false, d: false };
 
+let updateEvents: (() => void)[] = [];
+let actionEvents: (() => void)[] = [];
+
 new GlowFilter({
     color: 0x000000,
 });
@@ -139,8 +142,11 @@ function update(delta: number) {
 
     // Controlling when movement occurs
     // Prevents stuff like moving before detaching etc.
-    players.forEach((p) => p.move(p.data.x, p.data.y));
-    bullets.forEach((b) => b.move(b.data.x, b.data.y));
+    actionEvents.forEach((f) => f());
+    updateEvents.forEach((f) => f());
+
+    actionEvents = [];
+    updateEvents = [];
 }
 
 const client = new Client('ws://localhost:2567');
@@ -157,9 +163,7 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         players.set(i, player);
         orbitals.set(i, player);
 
-        p.onChange(() => {
-            player.update(p);
-        });
+        p.onChange(() => updateEvents.push(() => player.update(p)));
     });
 
     room.state.players.onRemove((_, i) => {
@@ -175,9 +179,7 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         bullets.set(i, bullet);
         orbitals.set(i, bullet);
 
-        b.onChange(() => {
-            bullet.update(b);
-        });
+        b.onChange(() => updateEvents.push(() => bullet.update(b)));
     });
     room.state.bullets.onRemove((_, i) => {
         bullets.get(i)!.destroy();
@@ -189,14 +191,16 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         bodies[i] = body;
         viewport.addChild(body.create());
 
-        b.onChange(() => bodies[i].update(room.state.bodies[i]));
-        b.players.onAdd((p) => {
-            players.get(p) && bodies[i].attach(players.get(p)!);
-        });
+        b.onChange(() => updateEvents.push(() => bodies[i].update(room.state.bodies[i])));
+        b.players.onAdd(
+            (p) => players.get(p) && actionEvents.push(() => bodies[i].attach(players.get(p)!))
+        );
         b.players.onRemove((p) => {
-            if (bodies[i].detach(players.get(p)!)) {
-                viewport.addChildAt(players.get(p)!.graphics(), 0);
-            }
+            actionEvents.push(() => {
+                if (bodies[i].detach(players.get(p)!)) {
+                    viewport.addChildAt(players.get(p)!.graphics(), 0);
+                }
+            });
         });
     });
 

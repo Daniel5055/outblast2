@@ -20,8 +20,9 @@ export class Player extends Orbital<PlayerSchema> {
         this.graphics().removeChild(this.getCannon());
     }
     addCannon() {
-        this.graphics().addChildAt(this.getCannon(), 0);
         this.getCannon().rotation = Math.PI - this.data.targetAngle + this.data.cannonAngle;
+        console.log(this.getCannon().rotation);
+        this.graphics().addChildAt(this.getCannon(), 0);
     }
     getCannon() {
         return this.#cannon!;
@@ -43,6 +44,7 @@ export class Player extends Orbital<PlayerSchema> {
         super.destroy();
     }
     moveCannon(angle: number) {
+        console.log(-this.data.targetAngle - angle, this.data.target);
         this.#rotate = ease.add(
             this.getCannon(),
             { rotation: -this.data.targetAngle - angle },
