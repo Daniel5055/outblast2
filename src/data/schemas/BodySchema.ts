@@ -9,4 +9,5 @@ export class BodySchema extends Schema {
     y: number = 0;
     rotationAngle: number = 0;
     players: SetSchema<string> = new SetSchema<string>();
+    bulletCount: number = 0;
 }

@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, Text } from 'pixi.js';
 import { SmoothGraphics } from '@pixi/graphics-smooth';
 import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
@@ -8,6 +8,8 @@ import { Player } from './Player';
 export class Body extends GameObject<BodySchema> {
     //players: Set<Player> = new Set<Player>();
     #sprite: Container | undefined;
+    #container: Container | undefined;
+    #count: Text | undefined;
     #easing: Easing | undefined;
     #rotate: Easing | undefined;
 
@@ -24,13 +26,26 @@ export class Body extends GameObject<BodySchema> {
         spot.beginFill(0x444444, 1.0, true);
         spot.drawCircle(0, this.data.radius - 20, 5);
 
+        this.#count = new Text(this.data.bulletCount, {
+            fontFamily: 'Arial',
+            fontSize: this.data.radius / 2,
+            fill: 0x444444,
+            align: 'center',
+            fontWeight: 'bold',
+        });
+        this.#count.anchor.set(0.5);
+
         this.#sprite = new Container();
         this.#sprite.addChild(graphics);
         this.#sprite.addChild(spot);
-        this.#sprite.position.x = this.data.x;
-        this.#sprite.position.y = this.data.y;
 
-        return this.#sprite;
+        this.#container = new Container();
+        this.#container.addChild(this.#sprite);
+        this.#container.addChild(this.#count);
+        this.#container.position.x = this.data.x;
+        this.#container.position.y = this.data.y;
+
+        return this.#container;
     }
 
     graphics() {
@@ -41,10 +56,11 @@ export class Body extends GameObject<BodySchema> {
         super.update(b);
         this.move(b.x, b.y);
         this.rotate(b.rotationAngle);
+        this.#count!.text = Math.floor(b.bulletCount);
     }
 
     move(x: number, y: number) {
-        this.#easing = ease.add(this.#sprite!, { x, y }, { duration: 50, ease: 'linear' });
+        this.#easing = ease.add(this.#container!, { x, y }, { duration: 50, ease: 'linear' });
     }
     rotate(rotation: number) {
         this.#rotate = ease.add(
@@ -56,7 +72,7 @@ export class Body extends GameObject<BodySchema> {
     attach(p: Player) {
         const playerGraphics = p.graphics();
         playerGraphics.removeFromParent();
-        this.#sprite!.addChildAt(p.graphics(), 0);
+        this.graphics().addChildAt(p.graphics(), 0);
 
         p.stopMoving();
         playerGraphics?.position.set(p.data.x, p.data.y);
