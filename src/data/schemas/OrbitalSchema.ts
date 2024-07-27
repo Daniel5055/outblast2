@@ -7,4 +7,7 @@ export class OrbitalSchema extends Schema {
     type: 'Player' | 'Bullet' | 'None' = 'None';
     x: number = 0;
     y: number = 0;
+
+    vx: number = 0;
+    vy: number = 0;
 }

@@ -1,5 +1,4 @@
-import { Application } from 'pixi.js';
-import { LINE_SCALE_MODE, settings } from '@pixi/graphics-smooth';
+import * as PIXI from 'pixi.js';
 import { Client } from 'colyseus.js';
 import { GameRoomState } from './data/schemas/GameRoomSchema';
 import { Body } from './data/Body';
@@ -8,27 +7,17 @@ import { Orbital } from './data/Orbital';
 import { Player } from './data/Player';
 import { Bullet } from './data/Bullet';
 import { OrbitalSchema } from './data/schemas/OrbitalSchema';
-import { GlowFilter } from '@pixi/filter-glow';
 
-const app = new Application({
-    width: window.innerWidth,
-    height: window.innerHeight,
-    resolution: devicePixelRatio,
+// Create app
+const app = new PIXI.Application();
+await app.init({
+    background: '#15162b',
+    resizeTo: window,
     antialias: true,
-    backgroundColor: 0x15162b,
 });
+document.body.appendChild(app.canvas);
 
-// @ts-ignore
-app.view.style!.position = 'fixed';
-app.view.style!.width = '100vw';
-app.view.style!.height = '100vh';
-// @ts-ignore
-app.view.style!.top = 0;
-// @ts-ignore
-app.view.style!.left = 0;
-// @ts-ignore
-document.body.appendChild(app.view);
-
+// Create viewport
 const viewport = new Viewport({
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
@@ -36,17 +25,9 @@ const viewport = new Viewport({
     worldHeight: 1000,
     events: app.renderer.events,
 });
+
 viewport.moveCenter(500, 500);
-
 app.stage.addChild(viewport);
-
-window.onresize = () => {
-    console.log('resize');
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-    viewport.resize(window.innerWidth, window.innerHeight);
-};
-
-settings.LINE_SCALE_MODE = LINE_SCALE_MODE.NONE;
 
 // Internal state
 let bodies: Body[] = [];
@@ -61,13 +42,8 @@ let inputs = { w: false, a: false, s: false, d: false };
 let updateEvents: (() => void)[] = [];
 let actionEvents: (() => void)[] = [];
 
-new GlowFilter({
-    color: 0x000000,
-});
-
-app.ticker.add(update);
-
-function update(delta: number) {
+app.ticker.add((ticker) => {
+    let delta = ticker.deltaTime;
     delta *= 16;
     if (inputs.w) {
         inputs.w = false;
@@ -80,7 +56,6 @@ function update(delta: number) {
             myPlayer.data.x = b.data.x + Math.cos(rotAngle) * b.data.radius;
             myPlayer.data.y = b.data.y - Math.sin(rotAngle) * b.data.radius;
 
-            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
             if (b.detach(myPlayer)) {
                 viewport.addChildAt(myPlayer.graphics(), 0);
             }
@@ -91,8 +66,6 @@ function update(delta: number) {
 
             myPlayer.data.x = myPlayer.data.x + (vx * delta) / 8;
             myPlayer.data.y = myPlayer.data.y + (vy * delta) / 8;
-
-            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
 
             for (const body of bodies) {
                 // The angle at which the body is from the orbital
@@ -115,9 +88,6 @@ function update(delta: number) {
 
             myPlayer.data.x = myPlayer.data.x + (vx * delta) / 8;
             myPlayer.data.y = myPlayer.data.y + (vy * delta) / 8;
-
-            console.log('preMove', myPlayer.data.x, myPlayer.data.y);
-
             myPlayer.data.target = -1;
         }
     }
@@ -140,6 +110,12 @@ function update(delta: number) {
         }
     }
 
+    for (const o of orbitals.values()) {
+        if (o.data.vx !== 0 || o.data.vy !== 0) {
+            updateEvents.push(() => o.simulate(delta));
+        }
+    }
+
     // Controlling when movement occurs
     // Prevents stuff like moving before detaching etc.
     actionEvents.forEach((f) => f());
@@ -147,14 +123,12 @@ function update(delta: number) {
 
     actionEvents = [];
     updateEvents = [];
-}
+});
 
 const client = new Client('ws://localhost:2567');
 client.joinOrCreate<GameRoomState>('my_room').then((room) => {
     room.state.players.onAdd((p, i) => {
-        console.log(i);
         const player = new Player(p, bodies);
-        console.log('added');
         viewport.addChildAt(player.create(), 0);
         if (i == room.sessionId) {
             myPlayer = player;

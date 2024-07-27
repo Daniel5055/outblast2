@@ -15,11 +15,10 @@
     },
     "dependencies": {
         "@colyseus/schema": "^2.0.9",
-        "@pixi/filter-glow": "^5.2.1",
-        "@pixi/graphics-smooth": "^1.1.0",
         "colyseus.js": "^0.15.8",
         "pixi-ease": "^3.0.7",
-        "pixi-viewport": "^5.0.1",
-        "pixi.js": "^7.2.4"
+        "pixi-filters": "^6.0.4",
+        "pixi-viewport": "^5.0.3",
+        "pixi.js": "^8.2.5"
     }
 }

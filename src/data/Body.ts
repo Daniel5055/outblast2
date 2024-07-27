@@ -1,5 +1,4 @@
-import { Container, Text } from 'pixi.js';
-import { SmoothGraphics } from '@pixi/graphics-smooth';
+import { Container, Graphics, Text } from 'pixi.js';
 import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
 import { BodySchema } from './schemas/BodySchema';
@@ -18,20 +17,23 @@ export class Body extends GameObject<BodySchema> {
     }
 
     create() {
-        const graphics = new SmoothGraphics();
-        graphics.beginFill(0xcccccc, 1.0, true);
-        graphics.drawCircle(0, 0, this.data.radius);
+        const graphics = new Graphics();
+        graphics.circle(0, 0, this.data.radius);
+        graphics.fill(0xcccccc);
 
-        const spot = new SmoothGraphics();
-        spot.beginFill(0x444444, 1.0, true);
-        spot.drawCircle(0, this.data.radius - 20, 5);
+        const spot = new Graphics();
+        spot.circle(0, this.data.radius - 20, 5);
+        spot.fill(0x444444);
 
-        this.#count = new Text(this.data.bulletCount, {
-            fontFamily: 'Arial',
-            fontSize: this.data.radius / 2,
-            fill: 0x444444,
-            align: 'center',
-            fontWeight: 'bold',
+        this.#count = new Text({
+            text: this.data.bulletCount,
+            style: {
+                fontFamily: 'Arial',
+                fontSize: this.data.radius / 2,
+                fill: 0x444444,
+                align: 'center',
+                fontWeight: 'bold',
+            },
         });
         this.#count.anchor.set(0.5);
 
