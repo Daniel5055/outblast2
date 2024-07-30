@@ -1,12 +1,12 @@
-import { Easing, ease } from 'pixi-ease';
 import { Container, Graphics } from 'pixi.js';
 import { OrbitalSchema } from './schemas/OrbitalSchema';
 import { GameObject } from './GameObject';
+import { Action, Actions, Interpolations } from 'pixi-actions';
 
 export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     #graphics: Graphics | undefined;
     #sprite: Container | undefined;
-    #easing: Easing | undefined;
+    #action: Action | undefined;
 
     update(t: T) {
         super.update(t);
@@ -44,23 +44,21 @@ export abstract class Orbital<T extends OrbitalSchema> extends GameObject<T> {
     }
 
     move(x: number, y: number) {
-        /*
-        this.#easing = ease.add(
-            this.graphics(),
-            { x: x, y: y },
-            { duration: 50, ease: 'linear' }
-        );
-        */
         if (!this.graphics().destroyed) {
-            this.graphics().x = x;
-            this.graphics().y = y;
+            this.#action?.stop();
+            this.#action = Actions.moveTo(
+                this.#sprite,
+                x,
+                y,
+                0.016666,
+                Interpolations.linear
+            ).play();
         }
     }
     stopMoving() {
-        this.#easing?.remove(this.#sprite);
+        Actions.clear(this.#graphics);
     }
     destroy() {
-        this.#easing?.remove(this.#graphics);
         this.#graphics!.destroy();
         this.#sprite!.destroy();
     }

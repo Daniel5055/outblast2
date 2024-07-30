@@ -1,16 +1,16 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { Easing, ease } from 'pixi-ease';
 import { GameObject } from './GameObject';
 import { BodySchema } from './schemas/BodySchema';
 import { Player } from './Player';
+import { Action, Actions, Interpolations } from 'pixi-actions';
 
 export class Body extends GameObject<BodySchema> {
     //players: Set<Player> = new Set<Player>();
     #sprite: Container | undefined;
     #container: Container | undefined;
     #count: Text | undefined;
-    #easing: Easing | undefined;
-    #rotate: Easing | undefined;
+    #moveAction: Action | undefined;
+    #rotateAction: Action | undefined;
 
     constructor(b: BodySchema) {
         super(b);
@@ -62,14 +62,23 @@ export class Body extends GameObject<BodySchema> {
     }
 
     move(x: number, y: number) {
-        this.#easing = ease.add(this.#container!, { x, y }, { duration: 50, ease: 'linear' });
+        this.#moveAction?.stop();
+        this.#moveAction = Actions.moveTo(
+            this.#container!,
+            x,
+            y,
+            0.02,
+            Interpolations.linear
+        ).play();
     }
     rotate(rotation: number) {
-        this.#rotate = ease.add(
+        this.#rotateAction?.stop();
+        this.#rotateAction = Actions.rotateTo(
             this.#sprite!,
-            { rotation: -rotation },
-            { duration: 50, ease: 'linear' }
-        );
+            -rotation,
+            0.02,
+            Interpolations.linear
+        ).play();
     }
     attach(p: Player) {
         const playerGraphics = p.graphics();
@@ -77,7 +86,7 @@ export class Body extends GameObject<BodySchema> {
         this.graphics().addChildAt(p.graphics(), 0);
 
         p.stopMoving();
-        playerGraphics?.position.set(p.data.x, p.data.y);
+        playerGraphics.position.set(p.data.x, p.data.y);
         p.addCannon();
     }
     detach(p: Player) {

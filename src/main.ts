@@ -7,6 +7,7 @@ import { Orbital } from './data/Orbital';
 import { Player } from './data/Player';
 import { Bullet } from './data/Bullet';
 import { OrbitalSchema } from './data/schemas/OrbitalSchema';
+import { Actions } from 'pixi-actions';
 
 // Create app
 const app = new PIXI.Application();
@@ -42,6 +43,7 @@ let inputs = { w: false, a: false, s: false, d: false };
 let updateEvents: (() => void)[] = [];
 let actionEvents: (() => void)[] = [];
 
+app.ticker.add((tick) => Actions.tick(tick.deltaTime / 60));
 app.ticker.add((ticker) => {
     let delta = ticker.deltaTime;
     delta *= 16;

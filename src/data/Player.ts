@@ -2,12 +2,12 @@ import { Graphics } from 'pixi.js';
 import { Body } from './Body';
 import { Orbital } from './Orbital';
 import { PlayerSchema } from './schemas/PlayerSchema';
-import { Easing, ease } from 'pixi-ease';
+import { Action, Actions, Interpolations } from 'pixi-actions';
 
 export class Player extends Orbital<PlayerSchema> {
     bTarget: Body | null = null;
     #cannon: Graphics | undefined;
-    #rotate: Easing | undefined;
+    #rotateAction: Action | undefined;
 
     vx: number | null = null;
     vy: number | null = null;
@@ -42,11 +42,13 @@ export class Player extends Orbital<PlayerSchema> {
         super.destroy();
     }
     moveCannon(angle: number) {
-        this.#rotate = ease.add(
+        this.#rotateAction?.stop();
+        this.#rotateAction = Actions.rotateTo(
             this.getCannon(),
-            { rotation: -this.data.targetAngle - angle },
-            { duration: 50, ease: 'linear' }
-        );
+            -this.data.targetAngle - angle,
+            0.02,
+            Interpolations.linear
+        ).play();
     }
     move(x: number, y: number) {
         if (this.data.target === -1) {
