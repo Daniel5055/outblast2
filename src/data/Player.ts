@@ -1,12 +1,12 @@
-import { Graphics } from 'pixi.js';
 import { Body } from './Body';
 import { Orbital } from './Orbital';
 import { PlayerSchema } from './schemas/PlayerSchema';
 import { Action, Actions, Interpolations } from 'pixi-actions';
+import * as PIXI from 'pixi.js';
 
 export class Player extends Orbital<PlayerSchema> {
     bTarget: Body | null = null;
-    #cannon: Graphics | undefined;
+    #cannon: PIXI.Graphics | undefined;
     #rotateAction: Action | undefined;
 
     vx: number | null = null;
@@ -31,7 +31,7 @@ export class Player extends Orbital<PlayerSchema> {
         const x = -this.data.cannonWidth / 2;
         const y = 0;
 
-        this.#cannon = new Graphics();
+        this.#cannon = new PIXI.Graphics();
         this.#cannon.rect(x, y, this.data.cannonWidth, this.data.cannonHeight);
         this.#cannon.fill(0x777777);
 
@@ -69,5 +69,26 @@ export class Player extends Orbital<PlayerSchema> {
     update(p: PlayerSchema): void {
         super.update(p);
         p.target !== -1 && this.moveCannon(p.cannonAngle);
+    }
+
+    explode(): PIXI.Container {
+        const explosion = new PIXI.Graphics()
+            .star(0, 0, 11, this.data.radius, this.data.radius / 2, 2)
+            .fill('#eb9e23')
+            .star(0, 0, 4, this.data.radius - 1, this.data.radius / 2, 2)
+            .fill('#ed4815');
+
+        explosion.position.set(this.data.x - this.data.cannonWidth / 2, this.data.y);
+        explosion.alpha = 0;
+
+        Actions.sequence(
+            Actions.parallel(
+                Actions.fadeTo(explosion, 0.7, 0.2, Interpolations.pow2out),
+                Actions.scaleTo(explosion, 4, 4, 0.1, Interpolations.pow2out)
+            ),
+            Actions.fadeOutAndRemove(explosion, 0.5, Interpolations.pow2out)
+        ).play();
+
+        return explosion;
     }
 }

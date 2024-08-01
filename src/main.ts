@@ -143,7 +143,8 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
     });
 
     room.state.players.onRemove((_, i) => {
-        players.get(i)!.destroy();
+        players.get(i)?.destroy();
+        viewport.addChildAt(bullets.get(i)!.explode(), 0);
         players.delete(i);
     });
 
@@ -158,7 +159,8 @@ client.joinOrCreate<GameRoomState>('my_room').then((room) => {
         b.onChange(() => updateEvents.push(() => bullet.update(b)));
     });
     room.state.bullets.onRemove((_, i) => {
-        bullets.get(i)!.destroy();
+        bullets.get(i)?.destroy();
+        viewport.addChildAt(bullets.get(i)!.explode(), 0);
         bullets.delete(i);
     });
     // Bodies
